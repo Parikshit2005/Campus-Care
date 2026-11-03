@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+
+    <!-- Card -->
+    <div class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 rounded-3xl overflow-hidden shadow-2xl">
+
+        <!-- Left Panel -->
+        <div class="bg-gradient-to-br from-indigo-600 via-blue-600 to-violet-600 p-10 flex flex-col justify-between text-white hidden md:flex">
+            <div>
+                <h1 class="text-3xl font-bold mb-2">🎓 CampusCare</h1>
+                <p class="text-indigo-200 text-sm">From Issues, To Actions</p>
+            </div>
+            <div class="space-y-6">
+                <div class="bg-white/10 rounded-2xl p-5 backdrop-blur-sm">
+                    <p class="text-2xl mb-2">📋</p>
+                    <p class="font-semibold text-sm">Report campus issues instantly</p>
+                    <p class="text-indigo-200 text-xs mt-1">Submit with photo, location and category</p>
+                </div>
+                <div class="bg-white/10 rounded-2xl p-5 backdrop-blur-sm">
+                    <p class="text-2xl mb-2">🛡️</p>
+                    <p class="font-semibold text-sm">Your identity is protected</p>
+                    <p class="text-indigo-200 text-xs mt-1">Anonymous reporting for students</p>
+                </div>
+                <div class="bg-white/10 rounded-2xl p-5 backdrop-blur-sm">
+                    <p class="text-2xl mb-2">⚡</p>
+                    <p class="font-semibold text-sm">Real-time status tracking</p>
+                    <p class="text-indigo-200 text-xs mt-1">Know when your issue is resolved</p>
+                </div>
+            </div>
+            <p class="text-indigo-300 text-xs">© 2026 CampusCare. All rights reserved.</p>
+        </div>
+
+        <!-- Right Panel -->
+        <div class="bg-white p-10 flex flex-col justify-center">
+
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-gray-800">Welcome back</h2>
+                <p class="text-gray-400 text-sm mt-1">Sign in to your CampusCare account</p>
+            </div>
+
+            <form method="POST" class="space-y-5">
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Email address</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">✉️</span>
+                        <input type="email" name="email" required
+                            class="w-full border border-gray-200 rounded-xl pl-9 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition"
+                            placeholder="you@example.com">
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-1.5">
+                        <label class="text-sm font-medium text-gray-700">Password</label>
+                    </div>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔒</span>
+                        <input type="password" name="password" id="password" required
+                            class="w-full border border-gray-200 rounded-xl pl-9 pr-10 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition"
+                            placeholder="••••••••">
+                        <button type="button" onclick="togglePassword()"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs hover:text-gray-600">
+                            👁️
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit"
+                    class="w-full bg-gradient-to-r from-indigo-600 to-blue-500 text-white py-3 rounded-xl text-sm font-semibold hover:opacity-90 transition shadow-md shadow-indigo-200">
+                    Sign In →
+                </button>
+
+            </form>
+
+            <div class="mt-6 pt-6 border-t border-gray-100 text-center">
+                <p class="text-sm text-gray-400">
+                    Don't have an account?
+                    <a href="{{ url_for('auth.register') }}" class="text-indigo-600 font-semibold hover:underline ml-1">
+                        Create one
+                    </a>
+                </p>
+            </div>
+
+            <!-- Mobile branding -->
+            <div class="mt-6 text-center md:hidden">
+                <p class="text-xs text-gray-300">🎓 CampusCare — From Issues, To Actions</p>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+function togglePassword() {
+    const p = document.getElementById('password');
+    p.type = p.type === 'password' ? 'text' : 'password';
+}
+</script>
+{% endblock %}

@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+{% block title %}Issue #{{ issue.id }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+
+    <!-- Back -->
+    <a href="javascript:history.back()"
+        class="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-indigo-600 transition mb-5">
+        ← Back
+    </a>
+
+    <!-- Hero Header -->
+    <div class="relative bg-gradient-to-br from-slate-800 to-slate-600 rounded-3xl p-8 mb-5 text-white overflow-hidden">
+        <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+        <div class="absolute bottom-0 left-0 w-40 h-40 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2"></div>
+
+        <div class="relative z-10">
+            <div class="flex flex-wrap gap-2 mb-4">
+                <span class="px-3 py-1 rounded-full text-xs font-medium bg-white/20 backdrop-blur-sm">
+                    Issue #{{ issue.id }}
+                </span>
+                <span class="px-3 py-1 rounded-full text-xs font-medium
+                    {% if issue.status == 'Pending' %} bg-yellow-400/20 text-yellow-300
+                    {% elif issue.status == 'In Progress' %} bg-blue-400/20 text-blue-300
+                    {% elif issue.status == 'Resolved' %} bg-green-400/20 text-green-300
+                    {% else %} bg-gray-400/20 text-gray-300 {% endif %}">
+                    ● {{ issue.status }}
+                </span>
+                <span class="px-3 py-1 rounded-full text-xs font-medium
+                    {% if issue.priority == 'Critical' %} bg-red-400/20 text-red-300
+                    {% elif issue.priority == 'High' %} bg-orange-400/20 text-orange-300
+                    {% elif issue.priority == 'Medium' %} bg-yellow-400/20 text-yellow-300
+                    {% elif issue.priority == 'Low' %} bg-green-400/20 text-green-300
+                    {% else %} bg-gray-400/20 text-gray-300 {% endif %}">
+                    {{ issue.priority }} Priority
+                </span>
+            </div>
+
+            <h1 class="text-2xl sm:text-3xl font-bold mb-2">{{ issue.title }}</h1>
+
+            <div class="flex flex-wrap gap-4 text-slate-300 text-sm mt-4">
+                <span>📁 {{ issue.category }}</span>
+                <span>📍 {{ issue.location }}</span>
+                <span>🕐 {{ issue.created_at.strftime('%d %b %Y, %I:%M %p') }}</span>
+                {% if issue.assigned_to %}
+                <span>👷 {{ issue.assigned_to }}</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+        <!-- Left Column -->
+        <div class="lg:col-span-2 space-y-5">
+
+            <!-- Description -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="bg-indigo-100 text-indigo-600 rounded-lg p-2 text-sm">📝</div>
+                    <h3 class="font-semibold text-gray-800">Description</h3>
+                </div>
+                <p class="text-sm text-gray-600 leading-relaxed">{{ issue.description }}</p>
+            </div>
+
+            <!-- Photo -->
+            {% if issue.photo %}
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="bg-purple-100 text-purple-600 rounded-lg p-2 text-sm">📷</div>
+                    <h3 class="font-semibold text-gray-800">Attached Photo</h3>
+                </div>
+                <img src="{{ url_for('static', filename='uploads/' + issue.photo) }}"
+                    alt="Issue Photo"
+                    class="rounded-2xl w-full object-cover max-h-80 cursor-pointer hover:opacity-95 transition"
+                    onclick="document.getElementById('photoModal').classList.remove('hidden')">
+            </div>
+            {% endif %}
+
+            <!-- Faculty Observation -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="bg-violet-100 text-violet-600 rounded-lg p-2 text-sm">👨‍🏫</div>
+                    <h3 class="font-semibold text-gray-800">Faculty Observation</h3>
+                </div>
+                {% if issue.faculty_observation %}
+                <div class="bg-violet-50 border border-violet-100 rounded-xl p-4">
+                    <p class="text-sm text-gray-700 leading-relaxed">{{ issue.faculty_observation }}</p>
+                    {% if issue.faculty_priority %}
+                    <div class="mt-3 flex items-center gap-2">
+                        <span class="text-xs text-gray-500">Priority Suggestion:</span>
+                        <span class="px-2 py-0.5 rounded-full text-xs font-medium
+                            {% if issue.faculty_priority == 'Critical' %} bg-red-100 text-red-700
+                            {% elif issue.faculty_priority == 'High' %} bg-orange-100 text-orange-700
+                            {% elif issue.faculty_priority == 'Medium' %} bg-yellow-100 text-yellow-700
+                            {% else %} bg-green-100 text-green-700 {% endif %}">
+                            {{ issue.faculty_priority }}
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="bg-gray-50 rounded-xl p-4 text-center">
+                    <p class="text-sm text-gray-300">No observation added yet</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Faculty Action -->
+            {% if current_user.role == 'faculty' %}
+            <div class="bg-white rounded-2xl shadow-sm border border-violet-100 p-6">
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="bg-violet-100 text-violet-600 rounded-lg p-2 text-sm">✏️</div>
+                    <h3 class="font-semibold text-gray-800">Add / Update Observation</h3>
+                </div>
+                <form method="POST" action="{{ url_for('auth.observe_issue', issue_id=issue.id) }}" class="space-y-4">
+                    <textarea name="observation" rows="4"
+                        class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400 resize-none transition"
+                        placeholder="Describe your observation...">{{ issue.faculty_observation or '' }}</textarea>
+                    <select name="faculty_priority"
+                        class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400 transition">
+                        <option value="">-- Suggest Priority --</option>
+                        <option {% if issue.faculty_priority == 'Low' %}selected{% endif %} value="Low">🟢 Low</option>
+                        <option {% if issue.faculty_priority == 'Medium' %}selected{% endif %} value="Medium">🟡 Medium</option>
+                        <option {% if issue.faculty_priority == 'High' %}selected{% endif %} value="High">🟠 High</option>
+                        <option {% if issue.faculty_priority == 'Critical' %}selected{% endif %} value="Critical">🔴 Critical</option>
+                    </select>
+                    <button type="submit"
+                        class="w-full bg-gradient-to-r from-violet-600 to-purple-500 text-white py-3 rounded-xl text-sm font-semibold hover:opacity-90 transition shadow-md shadow-violet-200">
+                        Submit Observation
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+
+            <!-- Authority Action -->
+            {% if current_user.role == 'authority' %}
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="bg-slate-100 text-slate-600 rounded-lg p-2 text-sm">🛡️</div>
+                    <h3 class="font-semibold text-gray-800">Manage Issue</h3>
+                </div>
+                <form method="POST" action="{{ url_for('auth.update_issue', issue_id=issue.id) }}" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1.5">Update Status</label>
+                        <select name="status"
+                            class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400 transition">
+                            <option {% if issue.status == 'Pending' %}selected{% endif %}>Pending</option>
+                            <option {% if issue.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                            <option {% if issue.status == 'Resolved' %}selected{% endif %}>Resolved</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1.5">Assign To Team</label>
+                        <select name="assigned_to"
+                            class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400 transition">
+                            <option value="">-- Select Team --</option>
+                            <option {% if issue.assigned_to == 'Electrical Team' %}selected{% endif %}>Electrical Team</option>
+                            <option {% if issue.assigned_to == 'Plumbing Team' %}selected{% endif %}>Plumbing Team</option>
+                            <option {% if issue.assigned_to == 'Housekeeping' %}selected{% endif %}>Housekeeping</option>
+                            <option {% if issue.assigned_to == 'IT Support' %}selected{% endif %}>IT Support</option>
+                            <option {% if issue.assigned_to == 'Security' %}selected{% endif %}>Security</option>
+                            <option {% if issue.assigned_to == 'Maintenance' %}selected{% endif %}>Maintenance</option>
+                        </select>
+                    </div>
+                    <button type="submit"
+                        class="w-full bg-gradient-to-r from-slate-800 to-slate-600 text-white py-3 rounded-xl text-sm font-semibold hover:opacity-90 transition shadow-md shadow-slate-200">
+                        Save Changes
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+
+        </div>
+
+        <!-- Right Column -->
+        <div class="space-y-5">
+
+            <!-- Status Timeline -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <div class="flex items-center gap-2 mb-5">
+                    <div class="bg-blue-100 text-blue-600 rounded-lg p-2 text-sm">📊</div>
+                    <h3 class="font-semibold text-gray-800">Status Timeline</h3>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex gap-3">
+                        <div class="flex flex-col items-center">
+                            <div class="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center text-white text-xs">✓</div>
+                            <div class="w-0.5 h-8 bg-gray-200 mt-1"></div>
+                        </div>
+                        <div class="pt-1">
+                            <p class="text-sm font-medium text-gray-800">Submitted</p>
+                            <p class="text-xs text-gray-400">{{ issue.created_at.strftime('%d %b %Y') }}</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="flex flex-col items-center">
+                            <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs
+                                {% if issue.status in ['In Progress', 'Resolved'] %} bg-green-500 text-white
+                                {% else %} bg-gray-200 text-gray-400 {% endif %}">
+                                {% if issue.status in ['In Progress', 'Resolved'] %}✓{% else %}○{% endif %}
+                            </div>
+                            <div class="w-0.5 h-8 bg-gray-200 mt-1"></div>
+                        </div>
+                        <div class="pt-1">
+                            <p class="text-sm font-medium text-gray-800">In Progress</p>
+                            <p class="text-xs text-gray-400">
+                                {% if issue.status in ['In Progress', 'Resolved'] %}Assigned to {{ issue.assigned_to or 'team' }}{% else %}Pending{% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <div>
+                            <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs
+                                {% if issue.status == 'Resolved' %} bg-green-500 text-white
+                                {% else %} bg-gray-200 text-gray-400 {% endif %}">
+                                {% if issue.status == 'Resolved' %}✓{% else %}○{% endif %}
+                            </div>
+                        </div>
+                        <div class="pt-1">
+                            <p class="text-sm font-medium text-gray-800">Resolved</p>
+                            <p class="text-xs text-gray-400">
+                                {% if issue.resolved_at %}{{ issue.resolved_at.strftime('%d %b %Y') }}{% else %}Pending{% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Issue Info -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="bg-orange-100 text-orange-600 rounded-lg p-2 text-sm">ℹ️</div>
+                    <h3 class="font-semibold text-gray-800">Details</h3>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center py-2 border-b border-gray-50">
+                        <span class="text-xs text-gray-400">Category</span>
+                        <span class="text-xs font-medium text-gray-700">{{ issue.category }}</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-gray-50">
+                        <span class="text-xs text-gray-400">Location</span>
+                        <span class="text-xs font-medium text-gray-700">{{ issue.location }}</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-gray-50">
+                        <span class="text-xs text-gray-400">Priority</span>
+                        <span class="text-xs font-medium
+                            {% if issue.priority == 'Critical' %} text-red-600
+                            {% elif issue.priority == 'High' %} text-orange-600
+                            {% elif issue.priority == 'Medium' %} text-yellow-600
+                            {% else %} text-green-600 {% endif %}">
+                            {{ issue.priority }}
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-gray-50">
+                        <span class="text-xs text-gray-400">Assigned To</span>
+                        <span class="text-xs font-medium text-gray-700">{{ issue.assigned_to or '—' }}</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2">
+                        <span class="text-xs text-gray-400">Reported On</span>
+                        <span class="text-xs font-medium text-gray-700">{{ issue.created_at.strftime('%d %b %Y') }}</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Photo Fullscreen Modal -->
+{% if issue.photo %}
+<div id="photoModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center px-4"
+    onclick="document.getElementById('photoModal').classList.add('hidden')">
+    <img src="{{ url_for('static', filename='uploads/' + issue.photo) }}"
+        class="max-h-screen max-w-full rounded-2xl object-contain">
+</div>
+{% endif %}
+
+{% endblock %}

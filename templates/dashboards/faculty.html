@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block title %}Faculty Dashboard{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+
+    <!-- Header Banner -->
+    <div class="bg-gradient-to-r from-violet-600 to-purple-500 rounded-2xl p-6 mb-6 text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <p class="text-violet-200 text-sm mb-1">Faculty Portal</p>
+            <h2 class="text-2xl font-bold">Welcome, {{ current_user.name }} 👋</h2>
+            <p class="text-violet-100 text-sm mt-1">Review, observe and manage campus issues</p>
+        </div>
+        <a href="{{ url_for('auth.report_issue') }}"
+            class="bg-white text-violet-600 font-semibold px-5 py-2 rounded-xl text-sm hover:bg-violet-50 transition w-fit">
+            + Report Issue
+        </a>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div class="bg-white rounded-2xl p-5 flex items-center gap-4 shadow-sm border border-gray-100">
+            <div class="bg-violet-100 text-violet-600 rounded-xl p-3 text-xl">📝</div>
+            <div>
+                <p class="text-2xl font-bold text-gray-800">{{ issues|length }}</p>
+                <p class="text-xs text-gray-400">Total Issues</p>
+            </div>
+        </div>
+        <div class="bg-white rounded-2xl p-5 flex items-center gap-4 shadow-sm border border-gray-100">
+            <div class="bg-orange-100 text-orange-500 rounded-xl p-3 text-xl">🔍</div>
+            <div>
+                <p class="text-2xl font-bold text-gray-800">{{ issues|selectattr('status','equalto','Pending')|list|length }}</p>
+                <p class="text-xs text-gray-400">Pending Review</p>
+            </div>
+        </div>
+        <div class="bg-white rounded-2xl p-5 flex items-center gap-4 shadow-sm border border-gray-100">
+            <div class="bg-green-100 text-green-600 rounded-xl p-3 text-xl">✅</div>
+            <div>
+                <p class="text-2xl font-bold text-gray-800">{{ issues|selectattr('status','equalto','Resolved')|list|length }}</p>
+                <p class="text-xs text-gray-400">Resolved</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Issues Table -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+            <h3 class="font-semibold text-gray-800">Campus Issues</h3>
+            <select onchange="filterIssues(this.value)"
+                class="text-xs border border-gray-200 rounded-lg px-3 py-1.5 text-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-400">
+                <option value="all">All Status</option>
+                <option value="Pending">Pending</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Resolved">Resolved</option>
+            </select>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="text-left text-xs text-gray-400 border-b border-gray-100">
+                        <th class="pb-3 font-medium">#</th>
+                        <th class="pb-3 font-medium">Title</th>
+                        <th class="pb-3 font-medium">Category</th>
+                        <th class="pb-3 font-medium">Location</th>
+                        <th class="pb-3 font-medium">Status</th>
+                        <th class="pb-3 font-medium">Faculty Priority</th>
+                        <th class="pb-3 font-medium">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                    {% if issues %}
+                        {% for issue in issues %}
+                        <tr class="hover:bg-gray-50 transition issue-row" data-status="{{ issue.status }}">
+                            <td class="py-3 text-gray-400">{{ issue.id }}</td>
+                            <td class="py-3 font-medium text-gray-800 max-w-[150px] truncate">{{ issue.title }}</td>
+                            <td class="py-3 text-gray-500">{{ issue.category }}</td>
+                            <td class="py-3 text-gray-500">{{ issue.location }}</td>
+                            <td class="py-3">
+                                <span class="px-2 py-1 rounded-full text-xs font-medium
+                                    {% if issue.status == 'Pending' %} bg-yellow-100 text-yellow-700
+                                    {% elif issue.status == 'In Progress' %} bg-blue-100 text-blue-700
+                                    {% elif issue.status == 'Resolved' %} bg-green-100 text-green-700
+                                    {% else %} bg-gray-100 text-gray-600 {% endif %}">
+                                    {{ issue.status }}
+                                </span>
+                            </td>
+                            <td class="py-3">
+                                {% if issue.faculty_priority %}
+                                <span class="px-2 py-1 rounded-full text-xs font-medium
+                                    {% if issue.faculty_priority == 'Critical' %} bg-red-100 text-red-700
+                                    {% elif issue.faculty_priority == 'High' %} bg-orange-100 text-orange-700
+                                    {% elif issue.faculty_priority == 'Medium' %} bg-yellow-100 text-yellow-700
+                                    {% else %} bg-green-100 text-green-700 {% endif %}">
+                                    {{ issue.faculty_priority }}
+                                </span>
+                                {% else %}
+                                <span class="text-gray-300 text-xs">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3">
+                                <button onclick="openObserveModal({{ issue.id }}, '{{ issue.faculty_observation or '' }}', '{{ issue.faculty_priority or '' }}')"
+                                    class="bg-violet-600 text-white px-3 py-1 rounded-lg text-xs hover:bg-violet-700 transition">
+                                    Observe
+                                </button>
+                                <a href="{{ url_for('main.issue_detail', issue_id=issue.id) }}"
+                                    class="bg-gray-100 text-gray-600 px-3 py-1 rounded-lg text-xs hover:bg-gray-200 transition">
+                                    View
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="py-10 text-center text-gray-300">
+                                <div class="flex flex-col items-center gap-2">
+                                    <span class="text-4xl">📭</span>
+                                    <span class="text-sm">No issues found</span>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Observe Modal -->
+<div id="observeModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+        <div class="flex justify-between items-center mb-5">
+            <h3 class="font-semibold text-gray-800">Add Observation</h3>
+            <button onclick="closeObserveModal()" class="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+        </div>
+        <form method="POST" id="observeForm">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Observation / Notes</label>
+                    <textarea name="observation" id="modalObservation" rows="4"
+                        class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400 resize-none"
+                        placeholder="Describe your observation about this issue..."></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Priority Suggestion</label>
+                    <select name="faculty_priority" id="modalPriority"
+                        class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400">
+                        <option value="">-- Select Priority --</option>
+                        <option value="Low">Low</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
+                        <option value="Critical">Critical</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button type="button" onclick="closeObserveModal()"
+                    class="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50 transition">
+                    Cancel
+                </button>
+                <button type="submit"
+                    class="flex-1 bg-violet-600 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-violet-700 transition">
+                    Submit Observation
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openObserveModal(issueId, observation, priority) {
+    document.getElementById('observeForm').action = `/auth/issue/observe/${issueId}`;
+    document.getElementById('modalObservation').value = observation;
+    document.getElementById('modalPriority').value = priority;
+    document.getElementById('observeModal').classList.remove('hidden');
+}
+
+function closeObserveModal() {
+    document.getElementById('observeModal').classList.add('hidden');
+}
+
+function filterIssues(filter) {
+    document.querySelectorAll('.issue-row').forEach(row => {
+        row.style.display = (filter === 'all' || row.dataset.status === filter) ? '' : 'none';
+    });
+}
+</script>
+{% endblock %}

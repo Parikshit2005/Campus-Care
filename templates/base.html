@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusCare - {% block title %}{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+    {% if current_user.is_authenticated %}
+    <nav class="bg-white border-b border-gray-200 px-6 py-3 flex justify-between items-center sticky top-0 z-10 shadow-sm">
+        <span class="font-bold text-lg text-gray-800">🎓 CampusCare</span>
+        <div class="flex items-center gap-3">
+            <span class="text-sm text-gray-500 hidden sm:block">{{ current_user.name }}</span>
+            <span class="text-xs px-2 py-1 rounded-full font-medium
+                {% if current_user.role == 'student' %} bg-indigo-100 text-indigo-600
+                {% elif current_user.role == 'faculty' %} bg-violet-100 text-violet-600
+                {% else %} bg-slate-100 text-slate-600 {% endif %}">
+                {{ current_user.role }}
+            </span>
+            <a href="{{ url_for('auth.logout') }}"
+                class="text-sm text-gray-500 hover:text-red-500 transition font-medium">
+                Logout
+            </a>
+        </div>
+    </nav>
+    {% endif %}
+
+    <main class="p-4 md:p-8">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+            <div class="mb-4 px-4 py-3 rounded text-sm
+                {% if category == 'error' %} bg-red-100 text-red-700
+                {% else %} bg-green-100 text-green-700 {% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+</body>
+</html>
